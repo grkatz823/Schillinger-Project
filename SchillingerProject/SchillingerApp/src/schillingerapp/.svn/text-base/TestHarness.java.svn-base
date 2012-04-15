@@ -1,0 +1,335 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package schillingerapp;
+
+import javax.sound.midi.*;
+import org.jfugue.*;
+import java.io.*;
+
+/**
+ *
+ * @author prhayman
+ */
+public class TestHarness {
+
+    public void oldGeneratePossibilities(String musicString){
+
+//        RhythmGenerator generator = new RhythmGenerator();
+//        MelodyStruct original = this.populateOriginal(musicString);
+//        BinaryPattern match00 = this.findNewRhythmPattern(musicString,0);
+//        MelodyStruct melody00 = populateNewMelody(match00,original);
+//
+//
+//        original = this.populateOriginal(musicString);
+//        match00 = this.findNewRhythmPattern(musicString,1);
+//        BinaryPattern swap00 = generator.createRhythm(match00, RhythmGenerator.permType.SWAP);
+//        MelodyStruct melodySwap00 = populateNewMelody(swap00,original);
+//
+//        original = this.populateOriginal(musicString);
+//        match00 = this.findNewRhythmPattern(musicString,1);
+//        BinaryPattern repFirst00 = generator.createRhythm(match00, RhythmGenerator.permType.REPEAT1);
+//        MelodyStruct melodyRepFirst00 = populateNewMelody(repFirst00,original);
+//
+//        original = this.populateOriginal(musicString);
+//        match00 = this.findNewRhythmPattern(musicString,1);
+//        BinaryPattern repLast00 = generator.createRhythm(match00,RhythmGenerator.permType.REPEAT2);
+//        MelodyStruct melodyRepLast00 = populateNewMelody(repLast00,original);
+//
+//
+//        original = this.populateOriginal(musicString);
+//
+//        int nextTime = this.getNextTime(musicString);
+//        Converter converter = new Converter();
+//        String results = converter.MelodyStructToMusicString(original, 0, 0);
+//        results += converter.MelodyStructToMusicString(melody00, 1, nextTime);
+//        results += converter.MelodyStructToMusicString(melodySwap00,2,nextTime);
+//        results += converter.MelodyStructToMusicString(melodyRepFirst00, 3, nextTime);
+//        results += converter.MelodyStructToMusicString(melodyRepLast00, 4, nextTime);
+//
+//
+//        return results;
+
+    }
+
+    public void getKeyString(){
+        //    public String getKeyString() throws MyException {
+//        System.out.println("Enter a Key in the form \"CMAJOR\": ");
+//
+//
+//        String string = "";
+//        InputStreamReader input = new InputStreamReader(System.in);
+//        BufferedReader reader = new BufferedReader(input);
+//
+//        // read in user input
+//
+//        try {
+//
+//            string = reader.readLine();
+//
+//        } catch (Exception e) {
+//            System.out.println("Exception in IO.");
+//        }
+//
+//        return string;
+//    }
+
+    }
+    public void showNoteValues(String musicString) {
+
+        System.out.println("MusicString: \n" + musicString);
+        // Same as last test, only it prints out the melody values instead of rhythm.
+        MelodyAnalyzer melodyparser = new MelodyAnalyzer();
+
+        System.out.print("becomes: \n");
+
+        for (int i = 0; i < musicString.length(); i++) {
+            if (musicString.charAt(i) == '/') {
+                System.out.print("" + musicString.charAt(i - 2) + musicString.charAt(i - 1) + ", ");
+            }
+        }
+
+        System.out.println();
+
+        int[] values = melodyparser.getNoteValues(musicString);
+        for (int i = 0; i < values.length; i++) {
+            if (i != values.length - 1) {
+                System.out.print(values[i] + ", ");
+            } else {
+                System.out.print(values[i]);
+            }
+        }
+        System.out.println();
+        System.out.println();
+
+    }
+
+    /**
+     *  This block reads in a SchillingerPattern from a SchillingerDatabase.
+     *  It then creates a binaryPattern, which becomes a musicString.  That musicstring
+     *  is saved as a midi, then read back into the program, which matches it to
+     *  the Proper Schillinger Pattern.
+     * 
+     * @param file
+     */
+    public void startToFinish(String input, String output) {
+
+        try {
+            System.out.println("Input: " + input + "\nOutput: " + output);
+            Player player = new Player();
+            MusicGenerator musicMaker = new MusicGenerator();
+              
+            TimeNoteListener myListener = new TimeNoteListener();
+            
+            myListener.parseString(input);
+            System.out.println(myListener.getParsedString());
+            String testResults = musicMaker.generatePossibilities(myListener.getParsedString());
+            //System.out.println(testResults);
+            player.saveMidi(testResults, new File(output));
+        } catch (Exception e) {
+
+            System.err.println("Error: " + e);
+        }
+
+    }
+
+    public void startToFinish(String input, String output, int key) {
+
+        try {
+            System.out.println("Input: " + input + "\nOutput: " + output);
+            Player player = new Player();
+            MusicGenerator musicMaker = new MusicGenerator(key);
+            TimeNoteListener myListener = new TimeNoteListener();
+
+            myListener.parseString(input);
+            //          System.out.println(myListener.getParsedString());
+            String testResults = musicMaker.generatePossibilities(myListener.getParsedString());
+            //System.out.println(testResults);
+            player.saveMidi(testResults, new File(output));
+        } catch (Exception e) {
+
+            System.err.println("Error: " + e);
+        }
+
+    }
+
+    public void showTopMatchesAndOffset(int number, BinaryPattern binPat) {
+
+        HitListDB hitlist = new HitListDB(binPat);
+        hitlist.sortDB();
+        hitlist.printHitListDB();
+        System.out.println();
+        hitlist.printTopMatches(number);
+
+    }
+
+    public void showBinaryPatternFromFile(String file) {
+        Converter converter = new Converter();
+        TimeNoteListener myListener = new TimeNoteListener();
+        BinaryPattern binPat;
+
+        try {
+            myListener.parseString(file);
+            String musicString = myListener.getParsedString();
+            binPat = converter.convertMusicStringToBinaryPattern(musicString);
+
+            System.out.print(binPat);
+
+        } catch (Exception e) {
+            System.out.println("IO exception thrown when trying to read in " + file);
+        }
+
+    }
+
+    /**
+     * Converts the raw JFugue string to musicString, then
+     * extracts the binaryPattern.
+     * 
+     * @param file
+     * @return
+     */
+    public BinaryPattern getBinaryPatternFromFile(String file) {
+        Converter converter = new Converter();
+        TimeNoteListener myListener = new TimeNoteListener();
+        BinaryPattern binPat;
+
+        try {
+            myListener.parseString(file);
+            String musicString = myListener.getParsedString();
+            binPat = converter.convertMusicStringToBinaryPattern(musicString);
+
+            return binPat;
+
+        } catch (Exception e) {
+            System.out.println("IO exception thrown when trying to read in " + file);
+            return null;
+        }
+
+    }
+
+    /**
+     * 1) Cycles through the entire Schillinger database
+     * 2) Creates a binaryPattern from each Schillinger pattern
+     * 3) Converts it to musicString
+     * 4) Saves this to a a file
+     * 5) Reads the file, from which it creates a musicString
+     * 6) Extracts the binaryPattern
+     * 7) Compares this binaryPattern to the original
+     *
+     */
+    public void printDatabaseMatches() {
+        SchillingerDB database = new SchillingerDB();
+
+        try {
+            Converter converter = new Converter();
+            Player player = new Player();
+            TimeNoteListener myListener = new TimeNoteListener();
+
+            for (int i = 0; i < database.size; i++) {
+                myListener = new TimeNoteListener();
+                // Creates the new binaryPattern
+                BinaryPattern binPat = new BinaryPattern(database.getPatternFromDB(i), 0.125);
+                System.out.println(binPat);
+                // Creates the musicString
+                String musicString = "V0 @0 T585 " + converter.convertBinaryPatternToMusicString(binPat, 0, 0);
+                System.out.println("before: " + musicString);
+                // Saves the file
+                player.saveMidi(musicString, new File("SchDBTests" + i + ".mid"));
+                //Reads the file and gets raw musicString
+                myListener.parseString("SchDBTests" + i + ".mid");
+                //System.out.println("after: " + myListener.getParsedString());
+                //parses the musicString
+                String parsedString = myListener.getParsedString();
+                // Extracts BinaryPattern
+                BinaryPattern newPat = converter.convertMusicStringToBinaryPattern(parsedString);
+                System.out.println(newPat);
+
+                HitListDB hitList = new HitListDB(newPat);
+                hitList.sortDB();
+                //Compares the final result to the original binary pattern selected
+                System.out.println("The Match for SchDB" + i + " is: " + hitList.hitListMatrix[0][0].getPatternIndex());
+            }
+        } catch (Exception e) {
+        }
+
+    }
+
+    /**
+     * Takes in an integer corresponding to the index of
+     * a Schillinger pattern, and prints its length and
+     * binary pattern.
+     *
+     * @param pattern
+     */
+    public void printSchillingerPatternAndLength(int pattern) {
+        SchillingerDB schDB = new SchillingerDB();
+        int[] newPat = schDB.getPatternFromDB(pattern);
+
+        System.out.print("Schillinger pattern at index " + pattern +
+                " has length " + schDB.getPatternLengthFromDB(pattern) +
+                " and binary pattern ");
+        for (int i = 0; i < schDB.getPatternLengthFromDB(pattern); i++) {
+            System.out.print(newPat[i]);
+        }
+
+        System.out.println();
+    }
+
+    /**
+     * Takes in two int[] corresponding to binary patterns,
+     * finds all possible match values, and places them into
+     * an array.
+     *
+     * @param pitter
+     * @param patter
+     */
+    public void getRawMatchValues(int[] pitter, int[] patter) {
+
+        BinaryPattern testArray = new BinaryPattern(pitter, 0.25);
+        FuzzyMatcher matcher = new FuzzyMatcher();
+        double[] hitArray = matcher.offsetMatch(testArray, patter, 5);
+        System.out.println("testArray:");
+        for (int i = 0; i < hitArray.length; i++) {
+            System.out.print(hitArray[i] + ", ");
+        }
+        System.out.println();
+
+    }
+
+    /**
+     * Takes in two int[] corresponding to binaryPatterns,
+     * and uses Fuzzymatcher to find the highest possible
+     * matchValue.
+     *
+     * @param pitter
+     * @param patter
+     */
+    public void findMaxMatchValue(int[] pitter, int[] patter) {
+
+        BinaryPattern testArray = new BinaryPattern(pitter, 0.25);
+        FuzzyMatcher matcher = new FuzzyMatcher();
+        double[] hitArray = matcher.offsetMatch(testArray, patter, 5);
+        System.out.print("Max match value: ");
+        Match max = matcher.findMax(hitArray);
+        System.out.println(max.getMatchValue());
+
+    }
+
+    /**
+     * Takes in a musicString, creates a HitListDB, and prints
+     * the top pattern match.
+     * 
+     * @param musicString
+     */
+    public void printTopMatchFromMusicString(String musicString) {
+        Converter converter = new Converter();
+        SchillingerDB schDB = new SchillingerDB();
+        BinaryPattern binPat = converter.convertMusicStringToBinaryPattern(musicString);
+        HitListDB hitlist = new HitListDB(binPat);
+        hitlist.sortDB();
+        RhythmPattern pat = schDB.getSchillingerPatternFromDB(hitlist.hitListMatrix[0][0].getPatternIndex());
+        System.out.println("Top Schillinger Pattern Match Index: " + hitlist.hitListMatrix[0][0].getPatternIndex());
+        System.out.println(pat.getPatternToString());
+    }
+}

@@ -1,0 +1,7 @@
+#! /bin/sh
+cd ~/NetBeansProject/SchillingerApp/
+midi2ly -o TestResults.ly TestResults.mid
+lilypond TestResults.ly
+rm TestResults.ps
+evince TestResults.pdf
+

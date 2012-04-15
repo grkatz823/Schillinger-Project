@@ -1,0 +1,195 @@
+package schillingerapp;
+
+import org.jfugue.*;
+
+/**
+ *
+ * @author prhayman
+ */
+public class MelodyAnalyzer {
+
+    /**
+     * Histogram of all the midi note values in given musicString
+     */
+    public int[] histogram;
+    /**
+     * The midi note value of the pitchAxis
+     */
+    public int pitchAxis;
+
+
+    /**
+     * Creates a histogram of all the midi note values in a musicString,
+     * then uses this information to calculate the scale and pitch axis.
+     * 
+     * @param musicString
+     * @return
+     */
+    public MelodyStruct createAnalysis(String musicString) {
+        MelodyStruct melody = new MelodyStruct(musicString);
+
+        melody.populateMidiNoteValues();
+        this.makeHistogram(melody);
+        this.findPitchAxis();
+
+        melody.populateInfoPoints(pitchAxis);
+        melody.populateTrajectories();
+        melody.populateLineValues(pitchAxis);
+        melody.populateScribes();        
+
+        Converter converter = new Converter();
+        KeyFinder finder = new KeyFinder(this.pitchAxis, this.histogram);
+        melody.scale = finder.bestMatchScale;
+        melody.chromatic = finder.chromatic;
+        System.out.println("FINDING chromatic: " + converter.convertStringArrayToString(finder.chromatic));
+
+        return melody;
+    }
+
+    /**
+     * Analyzes the input LilyPond file to create and populate a new MelodyStruct.
+     *
+     * @param lily The input LilyPond file
+     * @return
+     */
+    public MelodyStruct createAnalysis(LilyPond lily) {
+        MelodyStruct melody = new MelodyStruct(lily);
+
+        melody.populateMidiNoteValues(lily);
+        this.makeHistogram(melody);
+        this.findPitchAxis();
+
+        melody.populateInfoPoints(pitchAxis);
+        melody.populateTrajectories();
+        melody.populateLineValues(pitchAxis);
+        melody.populateScribes();
+
+        KeyFinder finder = new KeyFinder(lily, this.pitchAxis, this.histogram);
+        melody.scale = finder.bestMatchScale;
+        melody.chromatic = finder.chromatic;
+
+        return melody;
+    }
+
+    /**
+     * Takes in a melodyStruct that has the midiNoteValues initialized with
+     * time information.  Duration is marked by a -1, as are rests.  Histogram
+     * returns an int[] of all 12 halfsteps with the durations added up of each
+     * note corresponding to an index beginning with C=0, C#=1, etc.  
+     * 
+     * @param melody
+     */
+    public void makeHistogram(MelodyStruct melody) {
+        histogram = new int[12];
+        int histogramIndex = -1;
+        boolean firstNote = false;
+
+
+        // detects leading rests in the form of -1
+        for (int i = 0; i < melody.melodyArray.length; i++) {
+            if (melody.melodyArray[i].getMidiNoteValue() > -1) {
+                firstNote = true;
+            }
+
+            if (firstNote) {
+                if (melody.melodyArray[i].getMidiNoteValue() > -1) {
+                    histogramIndex = melody.melodyArray[i].getMidiNoteValue() % 12;
+                }
+                histogram[histogramIndex]++;
+            }
+        }
+    }
+
+    /**
+     * Finds the note with the greatest duration and makes it the pitchAxis.
+     */
+    public void findPitchAxis() {
+        pitchAxis = 0;
+        int max = histogram[0];
+
+        for (int i = 1; i < histogram.length; i++) {
+            if (histogram[i] > max) {
+                max = histogram[i];
+                pitchAxis = i;
+            }
+        }
+    }
+/**
+ * checks each index in double[] t and saves, then returns the highest index
+ * @param t
+ * @return maxIndex
+ */
+    public int findMaxIndex(double[] t) {
+
+        double maximum = 0;
+        int maxIndex = 0;
+        // start with the first value
+        for (int i = 1; i < t.length; i++) {
+            if (t[i] > maximum) {
+                maximum = t[i];
+                maxIndex = i; // new maximum
+            }
+        }
+
+        return maxIndex;
+    }
+
+    /**
+     * Tokenizes a musicString and parses the numeric midi note value (0-128)
+     * from the token.
+     * @param musicString
+     * @return
+     */
+    public int[] getNoteValues(String musicString) {
+
+        Pattern pat = new Pattern(musicString);
+        MusicStringParser parser = new MusicStringParser();
+        // we need to first convert the string s into a pattern to tokenize it
+        String[] tokens = pat.getTokens();
+        int[] intArray = new int[tokens.length];
+
+        // fill array with decimal durations
+        for (int i = 0; i < tokens.length; i++) {
+            intArray[i] = (parser.getNote(tokens[i])).getValue();
+        }
+        return intArray;
+    }
+
+    /**
+     * Creates an int[] of all numeric midi note values (0-128) from a LilyPond
+     * tokenStream.
+     * 
+     * @param lily
+     * @return
+     */
+    public int[] getNoteValues(LilyPond lily) {
+        return lily.getMidiNoteValues();
+    }
+
+    /**
+     * Produces relative half steps between notes
+     * 
+     * @param intArray
+     * @return
+     */
+    public int[] calcDistances(int[] intArray) {
+
+        int[] distances = new int[intArray.length];
+        distances[0] = 0;
+
+        for (int i = 1; i < intArray.length; i++) {
+            distances[i] = intArray[i] - intArray[i - 1];
+        }
+
+        return distances;
+
+    }
+
+    /**
+     * Test code: prints the histogram to the console
+     */
+    public void showHistogram() {
+        Converter converter = new Converter();
+        System.out.println(converter.convertIntArrayToString(this.histogram));
+    }
+}

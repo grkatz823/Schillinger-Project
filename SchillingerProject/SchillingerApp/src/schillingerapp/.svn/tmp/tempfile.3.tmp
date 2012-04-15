@@ -1,0 +1,215 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package schillingerapp;
+
+import javax.sound.midi.*;
+import org.jfugue.*;
+import java.io.*;
+
+/**
+ *
+ * @author jones
+ */
+public class Main {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws FileNotFoundException, IOException, InvalidMidiDataException {
+<<<<<<< .mine
+    TestHarness tester = new TestHarness();
+    tester.printSchillingerPatternAndLength(0);
+=======
+        int[] pitter = {1, 0, 1, 0, 1, 0, 1};
+        int[] patter = new int[]{1, 0, 1, 0, 1};
+        TestHarness tester = new TestHarness();
+        tester.getRawMatchValues(pitter, patter);
+
+>>>>>>> .r174
+        tester.showBinaryPatternFromFile("fourBarMelody.mid");
+    }
+    public static void testCode(){
+
+
+
+//       tester.printDatabaseMatches();
+
+//       Binary Pattern binPat = tester.getBinaryPatternFromFile("fourBarMelody.mid");
+
+
+ //      int[] pitter = {1,0,1,1,1,0};
+ //      BinaryPattern testArray = new BinaryPattern(pitter, 0.25);
+ //      tester.showTopMatchesAndOffset(3, testArray);
+
+
+        //create a music string
+//        String testString = "C5/0.375 D5/0.125 E5/0.25 F5/0.25";
+//        tester.showNoteValues(testString);
+
+
+        //create a music string
+        String testString = "C5/0.375 C5/0.125 C5/0.25 C5/0.25";
+        Converter converter = new Converter();
+        SchillingerDB SchDB = new SchillingerDB();
+
+        //this will test the writing of the DB to a file
+        //SchDB.writeSchDB();
+
+
+        /* Gets from the Database, and then prints out the length and values
+        to test the helper methods' accuracy.*/
+        //int[] newPat = SchDB.getPatternFromDB(1);
+        //System.out.println(SchDB.getPatternLengthFromDB(1));
+        //for (int i = 0; i < SchDB.getPatternLengthFromDB(1); i++) {
+        // System.out.print(newPat[i]);
+        //}
+
+        // Tests fuzzyMatcher
+        int[] pitter = {1, 0, 1, 0, 1, 0, 1};
+        BinaryPattern testArray = new BinaryPattern(pitter, 0.25);
+        int[] testschPat = new int[]{1, 0, 1, 0, 1};
+        FuzzyMatcher matcher = new FuzzyMatcher();
+        double[] hitArray = matcher.offsetMatch(testArray, testschPat, 5);
+        System.out.println("testArray:");
+        for (int i = 0; i < hitArray.length; i++) {
+            System.out.print(hitArray[i] + ", ");
+        }
+        System.out.println();
+
+        // Tests findMax
+        Match max = matcher.findMax(hitArray);
+        System.out.println("Maximum of hitArray:");
+        System.out.println(max);
+
+        // Match Class testing
+        Match match = new Match(0.78, 5, 6);
+
+        System.out.println("Testing toString of Match class: " + match);
+
+
+
+        //Test MusicString Examples
+        String gershwinExample = "G5/0.125 Ab5/0.125 Bb5/0.25 G5/0.25 D6/0.25 " +
+                "C6/0.25 Bb5/0.25 G5/0.25 D6/0.25 C6/0.125 Bb5/0.125 G5/0.125 " +
+                "G5/0.125 G5/0.5 F5/0.25 D5/0.75 G5/0.125 A5/0.125 Bb5/0.25 " +
+                "G5/0.25 D6/0.25 C5/0.25 Bb5/0.25 G5/0.25 C5/0.25 C5/0.25 F5/1.00";
+
+        String otherExample = "D5/0.25 E5/0.25 G5/0.25 A5/0.25 B5/.125 D6/0.125 " +
+                "E6/0.25 E5/0.375 G5/0.125 A5/0.125 B5/0.125 G5/0.375 D5/0.125 " +
+                "E5/0.25 D5/0.5 D5/0.25 E5/0.25 G5/0.25 A5/0.5 B5/0.125 " +
+                "D6/0.125 E6/0.5 G6/0.25 F#6/0.125 G6/0.0625 E6/0.25 E6/0.5 " +
+                "D6/0.25 G6/0.25 F#6/0.25 G6/0.25 E6/0.5 G6/126 E6/0.125 " +
+                "D6/0.125 E6/0.125 D6/0.25 D6/0.125 C6/0.0625 B5/0.0625 " +
+                "A5/0.375 G5/0.125 E5/0.5";
+        BinaryPattern gershwinPattern = converter.convertMusicStringToBinaryPattern(gershwinExample);
+        BinaryPattern otherPattern = converter.convertMusicStringToBinaryPattern(otherExample);
+        HitListDB hitlist = new HitListDB(gershwinPattern);
+        System.out.println();
+        System.out.println("HitListDB original make for Gershwin Example:");
+        hitlist.printHitListDB();
+        System.out.println();
+
+        System.out.println("HitListDB sorted for Gershwin Example:");
+        hitlist.sortDB();
+        hitlist.printHitListDB();
+
+        System.out.println();
+        System.out.println("Index of Top Hit: " + hitlist.hitListMatrix[0][0].getPatternIndex());
+
+        //Testing TimeNoteListener Class
+
+        Player player = new Player();
+        try {
+            Pattern pit = player.loadMidi(new File("fourBarMelody.mid"));
+            System.out.println(pit.toString());
+
+            TimeNoteListener myListener = new TimeNoteListener();
+            myListener.parseString("fourBarMelody.mid");
+
+            System.out.println();
+            System.out.println("Parsed music String:");
+            System.out.println(myListener.output);
+            System.out.println();
+        } catch (Exception e) {
+        }
+
+        //Testing RhythmGenerator Class and subMethods
+        RhythmGenerator gen = new RhythmGenerator();
+
+        System.out.println("SchillingerPattern from Binary to Base Ten:");
+        int[] newPat = gen.convertBinaryPatternToBaseTen(SchDB.getPatternFromDB(0));
+        for (int i = 0; i < newPat.length; i++) {
+            System.out.print(newPat[i]);
+        }
+
+        System.out.println();
+        System.out.println();
+
+        System.out.println("SchillingerPattern from Base Ten to Binary:");
+        int[] oldPat = gen.convertBaseTenToBinary(newPat);
+        for (int i = 0; i < oldPat.length; i++) {
+            System.out.print(oldPat[i]);
+        }
+
+        System.out.println();
+        System.out.println();
+
+
+        System.out.println("Circularly Permuted two indices:");
+        int[] schoobiePat = gen.circularlyPermutePattern(oldPat, 2);
+
+        for (int i = 0; i < schoobiePat.length; i++) {
+            System.out.print(schoobiePat[i]);
+        }
+        System.out.println();
+
+        BinaryPattern binaryTest = new BinaryPattern(SchDB.getPatternFromDB(0), 0.125);
+        Converter testconvert = new Converter();
+
+
+        System.out.println();
+        String testString1 = testconvert.convertBinaryPatternToMusicString(binaryTest, 0, 0);
+        System.out.println("Testing BinaryPatternToMusicString()");
+        System.out.println(testString1);
+
+        try {
+            TimeNoteListener myListener = new TimeNoteListener();
+            myListener.parseString("fourBarMelody.mid");
+
+
+            binaryTest = converter.convertMusicStringToBinaryPattern(myListener.output);
+            System.out.println();
+            String testResults = gen.generatePossibilites(binaryTest);
+            System.out.println("RhythmGenerator Results:");
+            System.out.println(testResults);
+
+            Player playah = new Player();
+            playah.saveMidi(testResults, new File("testResults.mid"));
+
+        } catch (Exception e) {
+        }
+
+        MelodyStruct testStruct = new MelodyStruct(testString);
+        System.out.println(testStruct);
+
+        MelodyAnalyzer melody = new MelodyAnalyzer();
+        MelodyStruct analysis = melody.createAnalysis("C5/0.375 G5/0.125 G5/0.25 C5/0.25 E5/0.25 F5/0.25 G5/0.5 C6/0.375 B5/0.125 A5/0.125 B5/0.375 A5/0.125 G5/0.125 D6/0.25 E6/0.25 C6/0.25 B6/.125");
+        for (int i = 0; i < melody.histogram.length; i++) {
+            System.out.print(melody.histogram[i] + " ");
+        }
+        System.out.println();
+
+        System.out.println(analysis);
+//
+//        MelodyGenerator generator = new MelodyGenerator();
+//        int[] listOfNotes = generator.PermuteMelody(analysis, MelodyGenerator.MelodyPerm.NOCHANGE);
+//        System.out.println("list of Notes:");
+//        for(int i=0; i< listOfNotes.length; i++){
+//            System.out.print(listOfNotes[i] + " ");
+//        }
+//        System.out.println();
+
+    }
+}

@@ -1,0 +1,37 @@
+% Made by the SchillingerApplication of Vassar College 
+\version "2.7.38"
+\include "english.ly"
+
+
+
+\clef treble
+
+trackAchannelA = \relative cF {
+
+\tempo 4 = 120
+\time 4/4
+\key c \ionian
+
+c'4. g'8 g4 c, |
+e f g2 |
+c4. b8 a b4. |
+a8 g d'4 e c |
+
+}
+
+
+trackA = << 
+   \context Voice = channelA \trackAchannelA 
+>> 
+
+
+\score {
+
+  <<
+  \context Staff=trackA \trackA
+  >>
+
+  \layout {}
+  \midi {}
+
+}

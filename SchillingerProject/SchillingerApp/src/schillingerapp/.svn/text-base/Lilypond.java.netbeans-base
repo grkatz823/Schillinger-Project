@@ -1,0 +1,40 @@
+package schillingerapp;
+
+import java.util.*;
+import java.io.*;
+
+/**
+ *
+ * @author jestuart
+ */
+public class Lilypond {
+
+    String fileName;
+
+    public Lilypond(String file) {
+        this.fileName = file;
+        readLyFile();
+    }
+
+    public void readLyFile() {
+
+        File file = new File(this.fileName);
+        String tempLine;
+
+
+        try {
+            
+            Scanner scan = new Scanner(file);
+
+            while (scan.hasNextLine()) {
+                tempLine = scan.nextLine();
+                System.out.println(tempLine);
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+
+    }
+}

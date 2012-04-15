@@ -1,0 +1,28 @@
+\version "2.7.18"
+
+\score {
+  
+  \relative c'' {
+    \time 4/4
+    \key c \minor
+    
+    ees4. f8 d4. ees8 |
+    c2 c8 bes c d |
+    ees d ees f g4 g |
+    g2. f8 g |
+    
+    aes2 d,4 ees8 f |
+    g2 c,4 c8 d |
+    ees4 ees8 f d4 d8 ees
+    c1
+  }
+  
+  \midi 
+  {
+    %tempoWholesPerMinute = #(ly:make-moment 120 4)
+  }
+  
+  \layout {
+    
+  }
+}

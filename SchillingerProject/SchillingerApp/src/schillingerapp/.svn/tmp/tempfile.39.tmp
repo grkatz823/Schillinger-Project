@@ -1,0 +1,439 @@
+package schillingerapp;
+
+import org.jfugue.Pattern;
+import org.jfugue.MusicStringParser;
+
+/**
+ * Contains several methods facilitating the conversion between the various
+ * data forms used throughout the program. These include MelodyStruct, MusicString,
+ * and BinaryPattern.
+ *
+ * @author parks
+ */
+public class Converter {
+
+    /**
+     * Takes in a musicString and returns a BinaryPattern representing the
+     * rhythm pattern within the musicString.
+     * 
+     * @param musicString
+     * @return The rhythm pattern of the given musicString as a BinaryPattern.
+     */
+    public BinaryPattern convertMusicStringToBinaryPattern(String musicString) {
+
+        Double[] arr = this.getDurations(musicString);
+        Double greatestCommonFactor = this.findMin(arr);
+        int[] intArr = new int[arr.length];
+        int patternLength = 0;
+
+        // convert decimal duration to integer ratios
+        for (int i = 0; i < arr.length; i++) {
+            intArr[i] = (int) (arr[i] / greatestCommonFactor);
+        }
+
+        // create an array with a length equal to the sum 
+        // of all the elements of intArr
+        for (int i = 0; i < intArr.length; i++) {
+            patternLength += intArr[i];
+        }
+        int[] patternArr = new int[patternLength];
+
+        // fill array with 1's and 0's
+        int index = 0;
+        for (int i = 0; i < intArr.length; i++) {
+            patternArr[index] = 1;
+            index++;
+            for (int j = 1; j < intArr[i]; j++) {
+                patternArr[index] = 0;
+                index++;
+            }
+        }
+
+        BinaryPattern binPattern = new BinaryPattern(patternArr, greatestCommonFactor);
+
+        return binPattern;
+    }
+
+    /**
+     * Takes in a musicString and returns its rhythm pattern as a
+     * Double[] of durational values.
+     *
+     * @param musicString
+     * @return A Double[] of the durational values of given musicString.
+     */
+    public Double[] getDurations(String musicString) {
+
+        Pattern pat = new Pattern(musicString);
+        MusicStringParser parser = new MusicStringParser();
+
+        String[] tokens = pat.getTokens();
+        Double[] durationArray = new Double[tokens.length];
+
+        // fill array with decimal durations
+        for (int i = 0; i < tokens.length; i++) {
+            durationArray[i] = (parser.getNote(tokens[i])).getDecimalDuration();
+        }
+
+        return durationArray;
+
+    }
+
+    /**
+     * Finds the smallest value in an array of doubles.
+     * Modified from http://users.dickinson.edu/~braught/courses/cs132s02/classes/code/ArrayOps.src.html)
+     *
+     * @param doubleArray An array of integers.
+     *
+     * @return The smallest value in intArray.
+     */
+    public double findMin(Double[] doubleArray) {
+
+        // Use curMin to keep track of the smallest value
+        // that has been seen so far...
+        double curMin = doubleArray[0];
+
+        // Examine each number in nums in turn and see
+        // if it is smaller than the smallest number seen
+        // so far.
+        for (int i = 1; i < doubleArray.length; i++) {
+            if (doubleArray[i] < curMin) {
+                curMin = doubleArray[i];
+            }
+        }
+
+        return curMin;
+    }
+
+    /**
+     * Converts a binary pattern into a rhythm string that is
+     * representative of what a bass drum would play
+     * @param arr
+     * @return
+     */
+    public String convertBinaryPatternToRhythm(int[] arr) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("T[120] ");
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == 1) {
+                sb.append("[BASS_DRUM]i ");
+            } else if (arr[i] == 0) {
+                sb.append("Ri ");
+            }
+        }
+        String rhythm = sb.toString();
+        return rhythm;
+    }
+
+    /**
+     *  This method converts a Binary Pattern object into a music string
+     * using a piano voice as a default, and a C2 note to show rhythm
+     * Method takes in the binary pattern to be converted, which track
+     * to play on, and the time it should start playing.
+     * @param binPat
+     * @param voice
+     * @param time
+     * @return
+     */
+    public String convertBinaryPatternToMusicString(BinaryPattern binPat, int voice, int time) {
+
+        //Initializes variables and default settings 
+        String musicString = "V" + voice + " @" + time + " I[PIANO] ";
+        int currentTime = time;
+        double commonDenominator = binPat.getCommonDenominator();
+        RhythmGenerator generator = new RhythmGenerator();
+        int[] tenBase = generator.convertBinaryPatternToBaseTen(binPat.getBinaryPattern());
+        double[] durations = new double[tenBase.length];
+
+        //for loop intantiates each location of an array with the durations of 
+        //each note in base 10.
+        for (int i = 0; i < tenBase.length; i++) {
+            durations[i] = tenBase[i] * commonDenominator * 4;
+        }
+
+        //for loop adds each note onto a music string while specifying the voice
+        //and default note (C2) for each noteEvent.
+        for (int i = 0; i < durations.length; i++) {
+            musicString += "V" + voice + " @" + currentTime + " C5/" + durations[i] + " ";
+            currentTime += durations[i] * 120;
+        }
+
+        return musicString;
+
+    }
+
+    /**
+     * COME BACK
+     * @param listOfNotes
+     * @param binPat
+     * @param voice
+     * @param time
+     * @return
+     */
+    public String mergeRhythmAndMelody(int[] listOfNotes, BinaryPattern binPat, int voice, int time) {
+
+        //Initializes variables and default settings 
+        String musicString = "V" + voice + " @" + time + " I[PIANO] ";
+        int currentTime = time;
+        double commonDenominator = binPat.getCommonDenominator();
+        RhythmGenerator generator = new RhythmGenerator();
+        int[] tenBase = generator.convertBinaryPatternToBaseTen(binPat.getBinaryPattern());
+        double[] durations = new double[tenBase.length];
+
+        //for loop intantiates each location of an array with the durations of 
+        //each note in base 10.
+        for (int i = 0; i < tenBase.length; i++) {
+            durations[i] = tenBase[i] * commonDenominator;
+        }
+
+
+
+
+        //for loop adds each note onto a music string while specifying the voice
+        //and default note (C2) for each noteEvent.
+        for (int i = 0; i < durations.length; i++) {
+            String currentNote = convertNoteValue(listOfNotes[i]);
+            musicString += "V" + voice + " @" + currentTime + currentNote + durations[i] + " ";
+            currentTime += durations[i] * 120; //this is voodoo.
+        }
+
+        return musicString;
+
+    }
+
+    /**
+     * Takes an integer and mods it by 12 to get the note and checks string[] notenames
+     * to get the letter value of the note
+     * Then divides it by 12 and subtracts 1 to get the octave.
+     * Both these values are appended onto a string, which is returned.
+     * @param noteValue
+     * @return
+     */
+    public String convertNoteValue(int noteValue) {
+        String[] noteNames = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+        String string = "";
+
+        int note = noteValue % 12;
+        string += noteNames[note];
+
+        int octave = noteValue / 12;
+        string += octave;
+
+        return string;
+    }
+
+    /**
+     *
+     * @param melody
+     * @return
+     */
+    public int[] convertMelodyStructToBaseTen(MelodyStruct melody) {
+        int[] pat = new int[melody.melodyArray.length];
+        for (int i = 0; i < pat.length; i++) {
+            if (melody.melodyArray[i].getMidiNoteValue() < 0) {
+                pat[i] = 0;
+            } else {
+                pat[i] = 1;
+            }
+        }
+
+
+        // System.out.println("In convertMelodyStructToBaseTen");
+        // System.out.println(this.convertIntArrayToString(pat));
+        // new array has length equal to number of 1's in pattern
+        int oneCount = 0;
+        for (int i = 0; i < pat.length; i++) {
+            if (pat[i] == 1) {
+                oneCount++;
+            }
+        }
+        int[] newPat = new int[oneCount];
+
+
+        // count until next 1 appears
+        int binaryCount = 0;
+        int index = -1;
+
+        for (int i = 0; i < pat.length; i++) {
+
+            if (pat[i] == 1) {
+                index++;
+                binaryCount = 0;
+                binaryCount++;
+            }
+            if (pat[i] == 0) {
+                binaryCount++;
+            }
+
+            newPat[index] = binaryCount;
+
+        }
+
+        return newPat;
+    }
+
+    /**
+     * Given a MelodyStruct, produces an int[] with all the pitch values
+     * that are found in the MelodyStruct.
+     * 
+     * @param melody
+     * @return An int[] with all the pitch values in melody.
+     */
+    public int[] getListOfNotes(MelodyStruct melody) {
+        System.out.println(melody);
+        int noteCount = 0;
+        int[] binPat = melody.binPat.getBinaryPattern();
+        for (int i = 0; i < binPat.length; i++) {
+            if (melody.melodyArray[i].getMidiNoteValue() > -1) {
+                noteCount++;
+            }
+        }
+
+        int[] listOfNotes = new int[noteCount];
+        noteCount = 0;
+
+        for (int i = 0; i < binPat.length; i++) {
+            if (melody.melodyArray[i].getMidiNoteValue() > -1) {
+                listOfNotes[noteCount] = melody.melodyArray[i].getMidiNoteValue();
+                noteCount++;
+            }
+        }
+
+        return listOfNotes;
+    }
+
+    /**
+     * Converts a MelodyStruct to a MusicString.
+     *
+     * @param melody The MelodyStruct to be converted.
+     * @param voice The voice to be assigned to the MusicString (default is piano).
+     * @param time The tempo to be assigned to the MusicString (default is 120).
+     * @return A MusicString representing the combination of the MelodyStruct,
+     *         voice, and tempo values.
+     */
+    public String convertMelodyStructToMusicString(MelodyStruct melody, int voice, int time) {
+        System.out.println("In melodyStructToMusicString");
+        String musicString = "V" + voice + " @" + time + " I[PIANO] ";
+        int currentTime = time;
+        int[] durations = this.convertMelodyStructToBaseTen(melody);
+        int[] noteValues = this.getListOfNotes(melody);
+        double[] actualDurations = new double[durations.length];
+        double commonDenominator = melody.getCommonDenominator();
+
+        System.out.println("currentTime: " + currentTime);
+        System.out.println("durations: " + this.convertIntArrayToString(durations));
+        System.out.println("noteValues: " + this.convertIntArrayToString(noteValues));
+        System.out.println("commonDenominator: " + commonDenominator);
+
+        System.out.println("ActualDurations.length: " + durations.length);
+        System.out.println("noteValues.length: " + noteValues.length);
+
+        for (int i = 0; i < actualDurations.length; i++) {
+            actualDurations[i] = (double) durations[i] * commonDenominator;
+        }
+        System.out.println("Actual Durations:" + this.convertDoubleArrayToString(actualDurations));
+        //    System.out.println(this.convertDoubleArrayToString(actualDurations));
+        //    System.out.println("NoteValues:" + this.convertIntArrayToString(noteValues));
+
+        for (int i = 0; i < actualDurations.length; i++) {
+            String currentNote = this.convertNoteValue(noteValues[i]);
+            musicString += "V" + voice + " @" + currentTime + " " + currentNote + "/" + actualDurations[i] + " ";
+            currentTime += actualDurations[i] * 120;
+        }
+
+        System.out.println("end of melodyStructToMusicString");
+        System.out.println("end of convertMelodyStructToMusicString");
+        return musicString;
+    }
+
+    /**
+     * Taking an integer duration, prints out a 1 and a list of 0's equal to
+     * the length of the duration
+     * @param duration
+     * @return
+     */
+    public int[] getBinaryEquivalent(int duration) {
+        int[] intArr = new int[duration];
+        intArr[0] = 1;
+        for (int i = 1; i < duration; i++) {
+            intArr[i] = 0;
+        }
+        return intArr;
+    }
+
+    /**
+     * Takes an int array and prints it out character by character
+     * into a string which is then returned.
+     * @param pattern
+     * @return convertedArray
+     */
+    public String convertIntArrayToString(int[] pattern) {
+        String convertedArray = "";
+        for (int i = 0; i < pattern.length; i++) {
+            convertedArray += pattern[i];
+            if (i != pattern.length - 1) {
+                convertedArray += ",";
+            }
+        }
+        return convertedArray;
+    }
+
+    public String convertDoubleArrayToString(double[] pattern) {
+        String convertedArray = "";
+        for (int i = 0; i < pattern.length; i++) {
+            convertedArray += pattern[i] + ",";
+        }
+        return convertedArray;
+    }
+
+    public String transposeOctave(String musicString) {
+        int index = 0;
+
+        while (musicString.substring(index).contains("/")) {
+
+            //Submethod that can account for 1 or 2 digit octaves
+            int octave = this.getOctave(musicString.substring(index));
+
+            //Adjusts for the proper index based on the number of digits
+            if (octave < 10) {
+
+                //adds the substring before the octave in question,
+                //increases the octave, and adds the rest onto it.
+                musicString = musicString.substring(0, index + musicString.substring(index).indexOf("/") - 1) + (octave + 1) + musicString.substring(index + musicString.substring(index).indexOf("/"));
+                index += musicString.substring(index).indexOf("/") + 1;
+            } else {
+                //Slight difference for the change in the first substring
+                musicString = musicString.substring(0, index + musicString.substring(index).indexOf("/") - 2) + (octave + 1) + musicString.substring(index + musicString.substring(index).indexOf("/"));
+                index += musicString.substring(index).indexOf("/") + 1;
+
+
+            }
+        }
+
+
+        return musicString;
+    }
+
+    /**
+     * Helper method to get the numerical values of a one or two digit octave
+     * of a note event in a JFugue musicString.
+     *
+     * @param newString
+     * @return
+     */
+    public int getOctave(String newString) {
+        int octave = 0;
+        int index = newString.indexOf("/");
+
+        //Checks for a possible 10s value
+        if (Character.isDigit(newString.charAt(index - 2))) {
+            int tens = Character.getNumericValue(newString.charAt(index - 2));
+            int ones = Character.getNumericValue(newString.charAt(index - 1));
+            octave = tens * 10 + ones;
+        } else {
+            octave = Character.getNumericValue(newString.charAt(index - 1));
+        }
+
+        return octave;
+    }
+}

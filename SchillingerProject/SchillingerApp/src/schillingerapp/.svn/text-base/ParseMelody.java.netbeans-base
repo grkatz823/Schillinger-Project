@@ -1,0 +1,80 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package schillingerapp;
+import org.jfugue.*;
+
+/**
+ *
+ * @author parks
+ */
+public class ParseMelody {
+
+    /* takes a MusicString, separates it into individual tokens, and then 
+     * parses the numeric midi note value (0-128) from the token.*/
+    public int[] getNoteValues(String s) {
+        
+        Pattern pat = new Pattern(s);
+        MusicStringParser parser = new MusicStringParser();
+       // we need to first convert the string s into a pattern to tokenize it
+        String[] tokens = pat.getTokens();
+        int[] intArray = new int[tokens.length];
+
+        // fill array with decimal durations
+        for (int i = 0; i < tokens.length; i++) {
+            intArray[i] = (parser.getNote(tokens[i])).getValue();
+        }
+        return intArray;
+    }
+
+    /* Produces relative half steps between notes */ 
+    public int[] calcDistances(int[] intArray) {
+       
+       int[] distances = new int[intArray.length];
+       distances[0] = 0;
+       
+       for (int i = 1; i < intArray.length; i++) {
+           distances[i] = intArray[i] - intArray[i-1];
+       }
+       
+       return distances;
+       
+   }
+    
+    /* given a string, find the note that occurs the most frequently
+     * i.e. has a larger total duration than any other note
+     * returns int value of note (ranging from 0-128 for midi)
+     */
+    public int findPitchAxis(String s) {
+        Pattern pat = new Pattern(s);
+        MusicStringParser parser = new MusicStringParser();
+        String[] tokens = pat.getTokens();
+        double[] durationArray = new double[128];
+        
+        for (int i = 0; i < tokens.length; i++) {
+            durationArray[(int) (parser.getNote(tokens[i]).getValue())] += parser.getNote(tokens[i]).getDecimalDuration();
+        }
+        
+        // now that the array is filled, find the note that contains the max duration
+        int pitchAxis = this.findMaxIndex(durationArray);
+        return pitchAxis;
+
+    }
+    
+    public int findMaxIndex(double[] t) {
+        
+        double maximum = 0;
+        int maxIndex = 0;       
+        // start with the first value
+        for (int i = 1; i < t.length; i++) {
+            if (t[i] > maximum) {
+                maximum = t[i];
+                maxIndex = i; // new maximum
+            }
+        }
+        
+        return maxIndex;
+    }
+}

@@ -1,0 +1,30 @@
+\version "2.12.1"
+
+\score {
+  
+  \relative c'' {
+    \time 3/4
+    \key f \minor
+    
+    c4 ~ c8 des des c |
+    b8 ais b4 g' |
+    bes,4 ~ bes8 c c bes |
+    a8 gis a4 f' |
+    aes,4 ~ aes8 bes bes aes |
+    g8 fis g4 des' |
+    c4 ~ c8 bes8 aes g |
+    bes8 aes f2
+    
+    
+    
+  }
+  
+  \midi 
+  {
+    %tempoWholesPerMinute = #(ly:make-moment 120 4)
+  }
+  
+  \layout {
+    
+  }
+}

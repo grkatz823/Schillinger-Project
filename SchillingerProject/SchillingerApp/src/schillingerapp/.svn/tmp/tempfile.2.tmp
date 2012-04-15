@@ -1,0 +1,116 @@
+
+/*
+ *The FuzzyMatcher class functions as a helper object rather than a data object.  
+ * When first extracting patterns from a piece of music, Fuzzy matcher takes 
+ * the BinaryPattern from the user input and compares it to a schillingerPattern
+ * taken from the database.  Additionally, it compares the two arrays at all
+ * possible indices.  
+ * ----------------------------------------------------------------------------
+ * @author anparks and prhayman
+ */
+
+package schillingerapp;
+
+
+
+
+public class FuzzyMatcher {
+    
+    /* global variable needed to keep track of which pattern was inputted */
+    int patternIndex;
+ 
+    
+    /**
+     * Finds the number of hits between a schillingerPattern and a testArray 
+     * while taking into account the offset.  It does this by shifting the 
+     * longer pattern over one space, effectively ignoring the first element
+     * until the two patterns are of equal length. OffsetMatch returns a 
+     * double[] filled with the percentage of matches where the array index 
+     * corresponds to the offset at which it was found. Aditionally, the match
+     * percentage value is the percentage of similarity, plus the ratio of their lengths.
+     * Thus, patterns that are closer in length to the original pattern will have
+     * a higher match value;
+     * 
+     * @param binPattern
+     * @param schillingerPattern
+     * @param patternIndex
+     * @return
+     */
+    public double[] offsetMatch(BinaryPattern binPattern, int[] schillingerPattern, int patternIndex) {
+
+        this.patternIndex = patternIndex;
+        int[] longer;
+        int[] shorter;
+        int[] testArray = binPattern.getBinaryPattern();
+        
+        // for length and shifting purposes it is important to find the 
+        // longer array 
+        if (testArray.length > schillingerPattern.length) {
+            longer = testArray;
+            shorter = schillingerPattern;
+        } else {
+            longer = schillingerPattern;
+            shorter = testArray;
+        }
+        
+        // Creates a new array to store the hit values found for each offset 
+        double[] offsetArray = new double[longer.length - shorter.length + 1];
+        
+        // Cycles through each offset to test for hits 
+        for (int offset = 0; offset < (longer.length - shorter.length + 1);offset++) {
+            offsetArray[offset] = (((double)findHits(longer, shorter,offset))/shorter.length
+                  + ((double)shorter.length/(double)longer.length))/2; // weighted Resuls
+        }
+        
+        return offsetArray;
+        
+    }
+
+
+   /**
+    * Helper Method: looks at each item in the array, and increments if 
+    * equal.  Thus, finding the number of hits or "Hit Count".
+    * 
+    * @param longer
+    * @param shorter
+    * @param offset
+    * @return
+    */
+    public int findHits(int[] longer, int[] shorter, int offset) { 
+        int hitCount = 0;
+        
+        for (int i = 0; i < shorter.length; i++) {
+            if (longer[i + offset] == shorter[i]) {
+                hitCount++;
+            }
+        }
+        
+       return hitCount;
+    }
+    
+    /**
+     * Helper Method finds the maximum percentage of hits in the hitArray.
+     * Returns a Match oject, containing the maximum value and the index
+     * referencing the offset at which it was found.
+     * 
+     * @param t
+     * @return
+     */
+    public Match findMax(double[] matchValues) {
+        
+        double maximum = matchValues[0];
+        int offset = 0;
+       
+        // start with the first value
+        for (int i = 1; i < matchValues.length; i++) {
+            if (matchValues[i] > maximum) {
+                maximum = matchValues[i];   // new maximum
+                offset = i;
+            }
+        }
+        
+        Match match = new Match(maximum,offset,patternIndex);
+        
+        return match;
+    }
+}

@@ -1,0 +1,247 @@
+package schillingerapp;
+
+import javax.sound.midi.*;
+import org.jfugue.*;
+import java.io.*;
+import java.util.Random;
+
+/**
+ * Calls MelodyGenerator and RhythmGenerator, merging the output of both methods
+ * into a MusicString.
+ *
+ * @author prhayman
+ */
+public class MusicGenerator { //If this doesn't work, add "extends Exception"
+
+    String possibilities;
+    int key = -1;
+
+    public MusicGenerator() throws MyException {
+//        KeyFinder keyFinder = new KeyFinder();
+//        String keyString = this.getKeyString();
+//        this.key = keyFinder.stringToIndex(keyString);
+    }
+
+    public MusicGenerator(int key) {
+        this.key = key;
+    }
+
+    /**
+     * Repeatedly calls RhythmGenerator and MelodyGenerator and combines the 
+     * results to form the possibilities returned to the user in the form
+     * of a musicString.
+     * 
+     * @param musicString
+     * @return
+     */
+    public String generatePossibilities(String musicString) throws FileNotFoundException, IOException, InvalidMidiDataException {
+
+//        RhythmGenerator generator = new RhythmGenerator();
+//        MelodyStruct original = this.populateOriginal(musicString);
+//        BinaryPattern match00 = this.findNewRhythmPattern(musicString,0);
+//        MelodyStruct melody00 = populateNewMelody(match00,original);
+//
+//
+//        original = this.populateOriginal(musicString);
+//        match00 = this.findNewRhythmPattern(musicString,1);
+//        BinaryPattern swap00 = generator.createRhythm(match00, RhythmGenerator.permType.SWAP);
+//        MelodyStruct melodySwap00 = populateNewMelody(swap00,original);
+//
+//        original = this.populateOriginal(musicString);
+//        match00 = this.findNewRhythmPattern(musicString,1);
+//        BinaryPattern repFirst00 = generator.createRhythm(match00, RhythmGenerator.permType.REPEAT1);
+//        MelodyStruct melodyRepFirst00 = populateNewMelody(repFirst00,original);
+//
+//        original = this.populateOriginal(musicString);
+//        match00 = this.findNewRhythmPattern(musicString,1);
+//        BinaryPattern repLast00 = generator.createRhythm(match00,RhythmGenerator.permType.REPEAT2);
+//        MelodyStruct melodyRepLast00 = populateNewMelody(repLast00,original);
+//
+//
+//        original = this.populateOriginal(musicString);
+//
+//        int nextTime = this.getNextTime(musicString);
+//        Converter converter = new Converter();
+//        String results = converter.MelodyStructToMusicString(original, 0, 0);
+//        results += converter.MelodyStructToMusicString(melody00, 1, nextTime);
+//        results += converter.MelodyStructToMusicString(melodySwap00,2,nextTime);
+//        results += converter.MelodyStructToMusicString(melodyRepFirst00, 3, nextTime);
+//        results += converter.MelodyStructToMusicString(melodyRepLast00, 4, nextTime);
+//
+//
+//        return results;
+
+        RhythmGenerator generator = new RhythmGenerator();
+        Random randomGenerator = new Random();
+        Converter converter = new Converter();
+        MelodyStruct original = this.populateOriginal(musicString);
+        Tempo tempo = new Tempo(458);
+        String results =  "V0 @0 "+ tempo.getMusicString() + " " + converter.MelodyStructToMusicString(original, 0, 0);
+        int nextTime = this.getNextTime(musicString);
+
+        for (int i = 0; i < 4; i++) {
+            original = this.populateOriginal(musicString);
+
+            BinaryPattern rhythm = this.findNewRhythmPattern(musicString);
+            int perm = randomGenerator.nextInt(6);
+            BinaryPattern permRhythm = rhythm;
+            switch (perm) {
+                case 0:
+                    permRhythm = rhythm;
+                    break;
+                case 1:
+                    permRhythm = generator.createRhythm(rhythm, RhythmGenerator.permType.SWAP);
+                    break;
+                case 2:
+                    permRhythm = generator.createRhythm(rhythm, RhythmGenerator.permType.REPEAT1);
+                    break;
+                case 3:
+                    permRhythm = generator.createRhythm(rhythm, RhythmGenerator.permType.REPEAT2);
+                    break;
+                case 4:
+                    int[] tenBase = generator.convertBinaryPatternToBaseTen(rhythm.getBinaryPattern());
+                    permRhythm = generator.createRhythm(rhythm, RhythmGenerator.permType.CIRCPERM, randomGenerator.nextInt(tenBase.length));
+                    break;
+                case 5:
+                    permRhythm = generator.createRhythm(rhythm, RhythmGenerator.permType.BALANCE);
+                    break;
+                case 6:
+                    permRhythm = generator.createRhythm(rhythm, RhythmGenerator.permType.FRACTIONED);
+            }
+//            int[] tenBase = generator.convertBinaryPatternToBaseTen(permRhythm.getBinaryPattern());
+//
+//            for(int j=0;j<tenBase.length;j++){
+//                System.out.print(tenBase[j] + ", ");
+//
+//            }
+//            System.out.println();
+            MelodyStruct newMelody = populateNewMelody(permRhythm, original);
+            results += converter.MelodyStructToMusicString(newMelody, i + 1, nextTime);
+        }
+
+        System.out.println(results);
+        return results;
+
+    }
+
+    public String getKeyString() throws MyException {
+        System.out.println("Enter a Key in the form \"CMAJOR\": ");
+
+
+        String string = "";
+        InputStreamReader input = new InputStreamReader(System.in);
+        BufferedReader reader = new BufferedReader(input);
+
+        // read in user input
+
+        try {
+
+            string = reader.readLine();
+
+        } catch (Exception e) {
+            System.out.println("Exception in IO.");
+        }
+
+        return string;
+    }
+
+    /**
+     * This method gets the ending time for a music string.  It does this by
+     * looking at the last values in the music string, parsing out the time
+     * and the last note duration.  The duration is then multiplied by the
+     * proper coefficient, and added to the last start time.
+     *
+     * @param string
+     * @return
+     */
+    public int getNextTime(String string) {
+        double nextTime = 0;
+
+        Converter converter = new Converter();
+        BinaryPattern binpat = converter.convertMusicStringToBinaryPattern(string);
+        int length = binpat.getBinaryPattern().length;
+        nextTime = length * 120 * binpat.getCommonDenominator();
+
+
+        return (int) nextTime;
+
+    //Alternate Code?
+
+//        double nextTime = 0;
+//        double noteDuration = 0;
+//        int lastTime = 0;
+//        String infoString = string.substring(string.lastIndexOf("@"));
+//        int index = 0;
+//        String temp = "";
+//        while (infoString.charAt(index) != ' ') {
+//
+//            if (Character.isDigit(infoString.charAt(index))) {
+//                temp += infoString.charAt(index);
+//            }
+//            index++;
+//        }
+//
+//        lastTime = Integer.valueOf(temp);
+//        infoString = string.substring(string.lastIndexOf("/") + 1);
+//        noteDuration = Double.valueOf(infoString);
+//
+//        nextTime = lastTime + noteDuration * 120;
+//
+//        return (int) nextTime;
+
+    }
+
+    public MelodyStruct populateNewMelody(BinaryPattern rhythm, MelodyStruct original) {
+
+        MelodyStruct newMelody = new MelodyStruct(rhythm);
+        for (int i = 0; i < newMelody.melodyArray.length; i++) {
+            if (rhythm.getBinaryPattern()[i] == 1) {
+                newMelody.melodyArray[i].setMidiNoteValue(-2);
+            } else {//if 0
+                newMelody.melodyArray[i].setMidiNoteValue(-1);
+            }
+        }
+        newMelody.setKey(original.getKey());
+
+        MelodyGenerator tester = new MelodyGenerator(original, newMelody);
+        newMelody = tester.newMelody;
+
+        tester.permuteTrajectories(MelodyGenerator.MelodyPerm.VERTICAL);
+        newMelody = tester.newMelody;
+
+
+        return newMelody;
+    }
+
+    public MelodyStruct populateOriginal(String musicString) {
+        MelodyAnalyzer analyzer = new MelodyAnalyzer();
+        MelodyStruct original;
+
+        if (key > -1) {
+            original = analyzer.createAnalysis(musicString, key);
+        } else {
+            original = analyzer.createAnalysis(musicString);
+            key = original.getKey();
+        }
+
+        return original;
+    }
+
+    public BinaryPattern findNewRhythmPattern(String musicString) {
+        Converter converter = new Converter();
+        BinaryPattern binPat = converter.convertMusicStringToBinaryPattern(musicString);
+
+        HitListDB hitList = new HitListDB(binPat);
+        hitList.sortDB();
+        int topMatch = hitList.findTopMatchColumn();
+
+
+        SchillingerDB db = new SchillingerDB();
+        BinaryPattern newPat = new BinaryPattern(db.getPatternFromDB(hitList.hitListMatrix[0][topMatch].getPatternIndex()), binPat.getCommonDenominator());
+
+        return newPat;
+    }
+
+
+
+}

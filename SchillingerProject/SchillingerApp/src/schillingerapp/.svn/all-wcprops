@@ -1,0 +1,137 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/project_cia/!svn/ver/366/SchillingerApp/src/schillingerapp
+END
+MelodyAnalyzer.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/project_cia/!svn/ver/366/SchillingerApp/src/schillingerapp/MelodyAnalyzer.java
+END
+MelodyGenerator.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/project_cia/!svn/ver/367/SchillingerApp/src/schillingerapp/MelodyGenerator.java
+END
+TestHarness.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/project_cia/!svn/ver/258/SchillingerApp/src/schillingerapp/TestHarness.java
+END
+MyException.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/project_cia/!svn/ver/144/SchillingerApp/src/schillingerapp/MyException.java
+END
+Converter.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/project_cia/!svn/ver/367/SchillingerApp/src/schillingerapp/Converter.java
+END
+MelodyItem.java
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/project_cia/!svn/ver/355/SchillingerApp/src/schillingerapp/MelodyItem.java
+END
+SchillingerGUI.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/project_cia/!svn/ver/367/SchillingerApp/src/schillingerapp/SchillingerGUI.java
+END
+RhythmPattern.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/project_cia/!svn/ver/356/SchillingerApp/src/schillingerapp/RhythmPattern.java
+END
+SchillingerDB.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/project_cia/!svn/ver/219/SchillingerApp/src/schillingerapp/SchillingerDB.java
+END
+KeyFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/project_cia/!svn/ver/360/SchillingerApp/src/schillingerapp/KeyFinder.java
+END
+RhythmGenerator.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/project_cia/!svn/ver/364/SchillingerApp/src/schillingerapp/RhythmGenerator.java
+END
+BinaryPattern.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/project_cia/!svn/ver/332/SchillingerApp/src/schillingerapp/BinaryPattern.java
+END
+Main.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/project_cia/!svn/ver/309/SchillingerApp/src/schillingerapp/Main.java
+END
+HitListDB.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/project_cia/!svn/ver/357/SchillingerApp/src/schillingerapp/HitListDB.java
+END
+MusicGenerator.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/project_cia/!svn/ver/367/SchillingerApp/src/schillingerapp/MusicGenerator.java
+END
+MidiFileFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/project_cia/!svn/ver/211/SchillingerApp/src/schillingerapp/MidiFileFilter.java
+END
+SchillingerGUI.form
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/project_cia/!svn/ver/367/SchillingerApp/src/schillingerapp/SchillingerGUI.form
+END
+TimeNoteListener.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/project_cia/!svn/ver/300/SchillingerApp/src/schillingerapp/TimeNoteListener.java
+END
+LilyPond.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/project_cia/!svn/ver/365/SchillingerApp/src/schillingerapp/LilyPond.java
+END
+FuzzyMatcher.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/project_cia/!svn/ver/214/SchillingerApp/src/schillingerapp/FuzzyMatcher.java
+END
+Match.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/project_cia/!svn/ver/286/SchillingerApp/src/schillingerapp/Match.java
+END
+MelodyStruct.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/project_cia/!svn/ver/361/SchillingerApp/src/schillingerapp/MelodyStruct.java
+END

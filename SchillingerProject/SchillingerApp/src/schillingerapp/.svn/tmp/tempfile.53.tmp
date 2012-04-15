@@ -1,0 +1,498 @@
+package schillingerapp;
+
+import java.util.Arrays;
+import java.util.Vector;
+
+/**
+ *
+ * @author jestuart
+ */
+public class KeyFinder {
+
+    /**
+     * The root of the scale.
+     */
+    public int root;
+
+    /**
+     * The index of the mode.
+     * Ionian = 0       Dorian = 1
+     * Phrygian = 2     Lydian = 3
+     * Mixolydian = 4   Aeolian = 5
+     * Locrian = 6
+     */
+    public int modeIndex;
+
+    /**
+     * The LilyPond string corresponding to the mode and key.
+     * For example, A locrian would be represented by:
+     * "\key a \locrian"
+     */
+    public String keyString;
+
+    /**
+     * 
+     */
+    public int[] bestMatchScale;
+
+    /**
+     * 
+     */
+    public String[] chromatic = new String[12];
+
+    /**
+     *
+     */
+    public int[] histogram;
+
+    /**
+     *
+     */
+    public Vector<String> tokenStream;
+
+    public KeyFinder() {
+    }
+
+    public KeyFinder(String musicString) {
+        MelodyAnalyzer analyzer = new MelodyAnalyzer();
+        MelodyStruct melody = analyzer.createAnalysis(musicString);
+        this.root = analyzer.pitchAxis;
+        this.histogram = analyzer.histogram;
+        this.determineMode();
+    }
+
+    public KeyFinder(int pAxis, int[] histogram) {
+        this.root = pAxis;
+        this.histogram = histogram;
+        this.determineMode();
+    }
+
+    public KeyFinder(LilyPond lily, int pAxis, int[] histogram) {
+        //MelodyAnalyzer analyzer = new MelodyAnalyzer();
+        //MelodyStruct melody = analyzer.createAnalysis(lily);
+        this.root = pAxis;
+        this.histogram = histogram;
+        this.tokenStream = lily.tokenStream;
+        this.determineMode();
+        this.determineSharpsOrFlats();
+    }
+
+    /**
+     * Takes a string (such as AMAJOR), and checks its key and whether it's
+     * major or minor and returns the scales location (or index) in the int[][] scales.
+     * (e.g. AMAJOR's index is 9 so it is at index 9 in the int[][] scales.
+     * 
+     * @param string
+     * @return index
+     */
+    public int stringToIndex(String string) {
+        int index = 0;
+        String stringKey = string.toUpperCase();
+
+        switch (stringKey.charAt(0)) {
+            case 'A':
+                index = 9;
+                if (stringKey.charAt(1) == '#') {
+                    index++;
+                }
+                break;
+            case 'B':
+                index = 11;
+                if (stringKey.charAt(1) == '#') {
+                    index = 0;
+                }
+                break;
+            case 'C':
+                index = 0;
+                if (stringKey.charAt(1) == '#') {
+                    index++;
+                }
+                break;
+            case 'D':
+                index = 2;
+                if (stringKey.charAt(1) == '#') {
+                    index++;
+                }
+                break;
+            case 'E':
+                index = 4;
+                if (stringKey.charAt(1) == '#') {
+                    index++;
+                }
+            case 'F':
+                index = 5;
+                if (stringKey.charAt(1) == '#') {
+                    index++;
+                }
+                break;
+            case 'G':
+                index = 7;
+                if (stringKey.charAt(1) == '#') {
+                    index++;
+                }
+                break;
+            default:
+                index = 0;
+        }
+
+        if (stringKey.contains("MIN")) {
+            index += 12;
+        }
+
+        return index;
+    }
+
+    /**
+     * Compares the histogram data to the major and minor scales rooted at the
+     * given pitch axis, and returns the scales[] index of the best match.
+     * 
+     */
+    public void determineMode() {
+
+        //Define the int[] scales to which the histogram will be matched.
+        int[] ionianScale = this.createIonianScale(root);
+        int[] dorianScale = this.createDorianScale(root);
+        int[] phrygianScale = this.createPhrygianScale(root);
+        int[] lydianScale = this.createLydianScale(root);
+        int[] mixolydianScale = this.createMixolydianScale(root);
+        int[] aeolianScale = this.createAeolianScale(root);
+        int[] locrianScale = this.createLocrianScale(root);
+
+        int ionianMatchValue = 0;
+        int dorianMatchValue = 0;
+        int phrygianMatchValue = 0;
+        int lydianMatchValue = 0;
+        int mixolydianMatchValue = 0;
+        int aeolianMatchValue = 0;
+        int locrianMatchValue = 0;
+
+        /* Double array containing the match values for all 7 modes
+         * ordered from ionian to locrian.
+         */
+        double[] matchValueArray = new double[7];
+        // Keeps track of the highest match value
+        double maxMatchValue = 0;
+        // The total number of frequencies in the histogram
+        int matchValueDenominator = 0;
+
+        // Calculate the value of matchValueDenominator
+        for (int freq : histogram) {
+            matchValueDenominator += freq;
+        }
+
+        // Calculate the raw match values for all 7 modes
+        for (int i = 0; i < 7; i++) {
+            ionianMatchValue += histogram[ionianScale[i]];
+            //System.out.println("ionianMatchValue " + ionianMatchValue);
+            dorianMatchValue += histogram[dorianScale[i]];
+            //System.out.println("dorianMatchValue " + dorianMatchValue);
+            phrygianMatchValue += histogram[phrygianScale[i]];
+            //System.out.println("phrygianMatchValue " + phrygianMatchValue);
+            lydianMatchValue += histogram[lydianScale[i]];
+            //System.out.println("lydianMatchValue " + lydianMatchValue);
+            mixolydianMatchValue += histogram[mixolydianScale[i]];
+            //System.out.println("mixolydianMatchValue " + mixolydianMatchValue);
+            aeolianMatchValue += histogram[aeolianScale[i]];
+            //System.out.println("aeolianMatchValue " + aeolianMatchValue);
+            locrianMatchValue += histogram[locrianScale[i]];
+            //System.out.println("locrianMatchValue " + locrianMatchValue);
+            //System.out.println();
+        }
+
+        // Fill the match array with the adjusted match values between 0 and 1
+        matchValueArray[0] = (double) ionianMatchValue / matchValueDenominator;
+        matchValueArray[1] = (double) dorianMatchValue / matchValueDenominator;
+        matchValueArray[2] = (double) phrygianMatchValue / matchValueDenominator;
+        matchValueArray[3] = (double) lydianMatchValue / matchValueDenominator;
+        matchValueArray[4] = (double) mixolydianMatchValue / matchValueDenominator;
+        matchValueArray[5] = (double) aeolianMatchValue / matchValueDenominator;
+        matchValueArray[6] = (double) locrianMatchValue / matchValueDenominator;
+
+        // Determine the highest match value and its corresponding index
+        for (int i = 0; i < 7; i++) {
+            if(matchValueArray[i] > maxMatchValue){
+                maxMatchValue = matchValueArray[i];
+                this.modeIndex = i;
+            }
+        setBestMatchScale();
+        }
+    }
+
+    /**
+     * Given a binaryScale (a "template" for a given mode) and
+     * a root, constructs a scale of the given mode on the given
+     * root. The result is an int[] of intervals starting on C. For
+     * example, createScale(ionianBinaryPattern, 0) would output
+     * a C Ionian scale: {0, 2, 4, 5, 7, 9, 11}
+     *
+     * @param binaryScale
+     * @param root
+     * @return
+     */
+    private int[] createScale(int[] binaryScale, int root) {
+
+        /* Counter used to keep track of the current interval.
+         * This variable is initialized to the root value, and its
+         * value will be added to the resultScale array during a given
+         * iteration if the current value of binaryScale[] is 1,
+         * otherwise its value will be incremented.
+         */
+        int index = root;
+
+        /* Creates a new int[] with a length of 7 that will
+         * be filled with the intervals of a given scale.
+         */
+        int[] resultScale = new int[7];
+
+        /* Counter to keep track of the current position in
+         * the resultScaleArray
+         */
+        int resultCount = 0;
+
+        for (int i = 0; i < binaryScale.length; i++) {
+            if (binaryScale[i] == 1) {
+                //printNoteName(index);
+                // As all values in resultScale must be <= 11
+                if (index >= 12) {
+                    resultScale[resultCount] = index - 12;
+                } else {
+                    resultScale[resultCount] = index;
+                }
+                // Increment the current position in the result array
+                resultCount++;
+                // Increment the current interval value
+                index++;
+            } else {
+                index++;
+            }
+        }
+
+        //System.out.println();
+
+        /* Ensures that any interval values reduced by 12 by the nested
+         * if above are moved to the beginning of the resultScale array.
+         */
+        Arrays.sort(resultScale);
+
+        // Test code
+        for (int value : resultScale) {
+            //System.out.print(value + " ");
+        }
+        //System.out.println();
+
+        return resultScale;
+    }
+
+    /**
+     * Creates an Ionian (major) scale based on the given root.
+     *
+     * @param root
+     * @return An interval array of the form 0 >= x >= 12
+     */
+    private int[] createIonianScale(int root) {
+        int[] ionianBinaryScale = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1};
+        return this.createScale(ionianBinaryScale, root);
+    }
+
+    /**
+     * Creates a Dorian scale based on the given root.
+     *
+     * @param root
+     * @return An interval array of the form 0 >= x >= 12
+     */
+    private int[] createDorianScale(int root) {
+        int[] dorianBinaryScale = {1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0};
+        return this.createScale(dorianBinaryScale, root);
+    }
+
+    /**
+     * Creates a Phrygian scale based on the given root.
+     *
+     * @param root
+     * @return An interval array of the form 0 >= x >= 12
+     */
+    private int[] createPhrygianScale(int root) {
+        int[] phrygianBinaryScale = {1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0};
+        return this.createScale(phrygianBinaryScale, root);
+    }
+
+    /**
+     * Creates a Lydian scale based on the given root.
+     *
+     * @param root
+     * @return An interval array of the form 0 >= x >= 12
+     */
+    private int[] createLydianScale(int root) {
+        int[] lydianBinaryScale = {1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1};
+        return this.createScale(lydianBinaryScale, root);
+    }
+
+    /**
+     * Creates a Mixolydian scale based on the given root.
+     *
+     * @param root
+     * @return An interval array of the form 0 >= x >= 12
+     */
+    private int[] createMixolydianScale(int root) {
+        int[] mixolydianBinaryScale = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0};
+        return this.createScale(mixolydianBinaryScale, root);
+    }
+
+    /**
+     * Creates an Aeolian (natural minor) scale based on the
+     * given root.
+     *
+     * @param root
+     * @return An interval array of the form 0 >= x >= 12
+     */
+    private int[] createAeolianScale(int root) {
+        int[] aeolianBinaryScale = {1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0};
+        return this.createScale(aeolianBinaryScale, root);
+    }
+
+    /**
+     * Creates a Locrian scale based on the given root.
+     * 
+     * @param root
+     * @return An interval array of the form 0 >= x >= 12
+     */
+    private int[] createLocrianScale(int root) {
+        int[] locrianBinaryScale = {1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0};
+        return this.createScale(locrianBinaryScale, root);
+    }
+
+    /**
+     * Test code
+     * 
+     * @param pitch
+     */
+    private void printNoteName(int pitch) {
+        if (pitch >= 12) {
+            pitch -= 12;
+        }
+
+        switch (pitch) {
+            case 0:
+                System.out.println("C ");
+                break;
+            case 1:
+                System.out.println("C#/Db ");
+                break;
+            case 2:
+                System.out.println("D ");
+                break;
+            case 3:
+                System.out.println("D#/Eb ");
+                break;
+            case 4:
+                System.out.println("E ");
+                break;
+            case 5:
+                System.out.println("F ");
+                break;
+            case 6:
+                System.out.println("F#/Gb ");
+                break;
+            case 7:
+                System.out.println("G ");
+                break;
+            case 8:
+                System.out.println("G#/Ab ");
+                break;
+            case 9:
+                System.out.println("A ");
+                break;
+            case 10:
+                System.out.println("Bb ");
+                break;
+            case 11:
+                System.out.println("B ");
+                break;
+        }
+    }
+
+    public void setBestMatchScale() {
+        switch(modeIndex) {
+            case 0:
+                this.bestMatchScale = this.createIonianScale(root);
+                break;
+            case 1:
+                this.bestMatchScale = this.createDorianScale(root);
+                break;
+            case 2:
+                this.bestMatchScale = this.createPhrygianScale(root);
+                break;
+            case 3:
+                this.bestMatchScale = this.createLydianScale(root);
+                break;
+            case 4:
+                this.bestMatchScale = this.createMixolydianScale(root);
+                break;
+            case 5:
+                this.bestMatchScale = this.createAeolianScale(root);
+                break;
+            case 6:
+                this.bestMatchScale = this.createLocrianScale(root);
+                break;
+        }
+    }
+    
+    /**
+     *
+     * @return
+     */
+    public String getLilyPondKeyString(){
+        String rootString = "";
+        String modeString = "";
+        switch(root) {
+            case 0: rootString = "c"; break;
+            case 1: rootString = "des"; break;
+            case 2: rootString = "d"; break;
+            case 3: rootString = "ees"; break;
+            case 4: rootString = "e"; break;
+            case 5: rootString = "f"; break;
+            case 6: rootString = "fis"; break;
+            case 7: rootString = "g"; break;
+            case 8: rootString = "aes"; break;
+            case 9: rootString = "a"; break;
+            case 10: rootString = "bes"; break;
+            case 11: rootString = "b"; break;
+        }
+        switch(modeIndex) {
+            case 0: modeString = "ionian"; break;
+            case 1: modeString = "dorian"; break;
+            case 2: modeString = "phrygian"; break;
+            case 3: modeString = "lydian"; break;
+            case 4: modeString = "mixolydian"; break;
+            case 5: modeString = "aeolian"; break;
+            case 6: modeString = "locrian"; break;
+        }
+        return "\\key " + rootString + " \\" + modeString;
+    }
+
+    /**
+     *
+     */
+    public void determineSharpsOrFlats() {
+        String[] sharpChromatic = { "c", "cis", "d", "dis", "e", "f",
+                                    "fis", "g", "gis", "a", "ais", "b" };
+        String[] flatChromatic = { "c", "des", "d", "ees", "e", "f",
+                                    "ges", "g", "aes", "a", "bes", "b" };
+        int sharpCount = 0;
+        int flatCount = 0;
+
+        for(String noteToken : this.tokenStream) {
+            if (noteToken.contains("S")) {
+                sharpCount++;
+            } else if (noteToken.contains("F")) {
+                flatCount++;
+            }
+        }
+
+        if (sharpCount > flatCount) {
+            this.chromatic = sharpChromatic;
+        } else {
+            this.chromatic = flatChromatic;
+        }
+    }
+}

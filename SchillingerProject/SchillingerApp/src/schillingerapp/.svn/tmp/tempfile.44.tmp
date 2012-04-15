@@ -1,0 +1,614 @@
+package schillingerapp;
+
+import java.util.*;
+import java.io.*;
+import java.text.DecimalFormat;
+
+/**
+ *
+ * @author jestuart
+ */
+public class LilyPond {
+
+    Vector tokenString = new Vector();
+    Boolean relative = false;
+    String noteString;
+    String parsedNoteString;
+    String fullFileString = "";
+    String musicString = "";
+    String fileName = "";
+    String clef = "";
+    String timeSig = "";
+    String key = "";
+<<<<<<< .mine
+    double measures = 0;
+=======
+    int octave;
+>>>>>>> .r296
+    int tempo;
+
+    public LilyPond(String file) {
+        this.fileName = file;//G didn't do this
+        readLyFile();//
+        lexer();//
+    // System.out.println(fullFileString);//G didn't do this
+    }
+
+    public void readLyFile() {
+
+        File file = new File(this.fileName);//G didn't do this
+        String currentLine;//G
+
+
+        try {
+
+            Scanner scan = new Scanner(file);//G didn't do this
+
+            while (scan.hasNextLine()) {//G could've done this
+                currentLine = scan.nextLine();//I could've done this
+                fullFileString += currentLine + "\n";//not that hard
+            }//you're not special for doing this
+
+        } catch (Exception e) {//nothing interesting
+            System.out.println(e);//pretending to work
+        }//no one notices my fucked up comments
+
+
+    }
+
+    /**
+     * Lexer- a method that checks through fulFileString pulling out all the information we want,
+     * storing the time signature, clef, tempo, key, and the music string as a String
+     * and also in separate tokens.
+     */
+    public void lexer() {
+        fullFileString = fullFileString.trim();//trims trailing and leading whitespace
+        //System.out.println(fullFileString);
+        removeComments();
+        removeSlashTokens();
+
+        getNoteString();
+        formatString();
+
+
+        parseNotes();
+
+<<<<<<< .mine
+        // Object[] array = tokenString.toArray();
+        // for(int i=0; i<array.length; i++){
+        //     System.out.println(array[i] + ",");
+        // }
+        System.out.println("Measures:" +measures);
+=======
+        // Object[] array = tokenString.toArray();
+        // for(int i=0; i<array.length; i++){
+        //     System.out.println(array[i] + ",");
+        // }
+        System.out.println(noteString);
+        System.out.println("\n\n");
+>>>>>>> .r296
+        System.out.println(musicString);
+        System.out.println(parsedNoteString);
+        System.out.println(tempo);
+        System.out.println(timeSig);
+        System.out.println(clef);
+        System.out.println(key);
+
+    }
+
+    public void parseNotes() {
+        getTokens();
+        DecimalFormat df = new DecimalFormat("0.00000");
+        double decimal = 1;
+
+        for (int i = 0; i < tokenString.capacity(); i++) {
+            int absoluteOctave = 4;
+            int stringIndex = 1;
+            String element = tokenString.elementAt(i).toString();
+            musicString += Character.toUpperCase(element.charAt(0));
+
+
+            if (element.length() > 1 && element.charAt(1) == 'F') {
+                musicString += "b";
+                stringIndex++;
+            }
+            if (element.length() > 1 && element.charAt(1) == 'S') {
+                musicString += "#";
+                stringIndex++;
+            }
+
+            while (element.length() > stringIndex && element.charAt(stringIndex) == '\'') {
+                absoluteOctave++;
+                stringIndex++;
+            }
+            while (element.length() > stringIndex && element.charAt(stringIndex) == ',') {
+                absoluteOctave--;
+                stringIndex++;
+            }
+            musicString += absoluteOctave + "/";
+
+            String currentDuration = "";
+
+            while (element.length() > stringIndex && Character.isDigit(element.charAt(stringIndex))) {
+                currentDuration += element.charAt(stringIndex);
+                //System.out.println(currentDuration);
+                decimal = 1 / Double.valueOf(currentDuration);
+                stringIndex++;
+            }
+
+
+            if (element.contains(".")) {
+                double duration = decimal * 1.5;
+                musicString += duration + " ";
+            } else {
+                musicString += decimal + " ";
+            }
+        }
+    }
+
+        public void parseRelativeNotes() {
+        getTokens();
+        DecimalFormat df = new DecimalFormat("0.00000");
+        double decimal = 1;
+        String lastNote = tokenString.elementAt(0).toString();
+
+        for (int i = 0; i < tokenString.capacity(); i++) {
+            int stringIndex = 1;
+            String element = tokenString.elementAt(i).toString();
+            musicString += Character.toUpperCase(element.charAt(0));
+
+            Boolean hasAccidental = false;
+
+            if (element.length() > 1 && element.charAt(1) == 'F') {
+                hasAccidental = true;
+                musicString += "b";
+                stringIndex++;
+            }
+            if (element.length() > 1 && element.charAt(1) == 'S') {
+                hasAccidental = true;
+                musicString += "#";
+                stringIndex++;
+            }
+
+            while (element.length() > stringIndex && element.charAt(stringIndex) == '\'') {
+                octave++;
+                stringIndex++;
+            }
+            while (element.length() > stringIndex && element.charAt(stringIndex) == ',') {
+                octave--;
+                stringIndex++;
+            }
+            musicString += octave + "/";
+
+            String currentDuration = "";
+
+            while (element.length() > stringIndex && Character.isDigit(element.charAt(stringIndex))) {
+                currentDuration += element.charAt(stringIndex);
+                //System.out.println(currentDuration);
+                decimal = 1 / Double.valueOf(currentDuration);
+
+                stringIndex++;
+            }
+
+
+            if (element.contains(".")) {
+                double duration = decimal * 1.5;
+                musicString += duration + " ";
+                measures += duration;
+            } else {
+                musicString += decimal + " ";
+                measures += decimal;
+            }
+
+            lastNote = element;
+        }
+        if (!timeSig.equals("")) {
+            System.out.println("here");
+            int index = 0;
+            String a = "";
+            String b = "";
+            while (timeSig.charAt(index) != '/') {
+                a += timeSig.charAt(index);
+                index++;
+            }
+
+
+            index++;
+            while (index < timeSig.length()) {
+                b += timeSig.charAt(index);
+                index++;
+            }
+            double numerator = Double.valueOf(a);
+            double denominator = Double.valueOf(b);
+
+            measures = measures * (denominator / numerator);
+        }
+    }
+
+
+    public void getTokens() {
+        int index = 0;
+        String currentNote = "" + parsedNoteString.charAt(index);
+        index++;
+        while (index < parsedNoteString.length()) {
+
+            if (Character.isLowerCase(parsedNoteString.charAt(index))) {
+                //System.out.println(currentNote);
+                tokenString.addElement(currentNote);
+                currentNote = "";
+            }
+
+            currentNote += parsedNoteString.charAt(index);
+            index++;
+        }
+
+        tokenString.addElement(currentNote);
+
+        tokenString.trimToSize();
+        System.out.println(tokenString);
+
+
+    }
+
+    public void formatString() {
+        parsedNoteString = noteString;
+
+        while (parsedNoteString.contains("|")) {
+            parsedNoteString = removeChar("|", parsedNoteString);
+        }
+        if (parsedNoteString.contains("\n")) {
+            parsedNoteString = parsedNoteString.replace('\n', ' ');
+        }
+
+        while (parsedNoteString.contains("(")) {
+            parsedNoteString = removeChar("(", parsedNoteString);
+        }
+
+        while (parsedNoteString.contains(")")) {
+            parsedNoteString = removeChar(")", parsedNoteString);
+        }
+
+        while (parsedNoteString.contains("~")) {
+            parsedNoteString = removeChar("~", parsedNoteString);
+        }
+
+
+
+
+        while (parsedNoteString.contains("  ")) {
+            parsedNoteString = parsedNoteString.replace("  ", " ");
+        }
+
+<<<<<<< .mine
+        while (parsedNoteString.contains("es")) {
+            parsedNoteString = parsedNoteString.replace("es", "F");
+        }
+
+=======
+        formatSharpsAndFlats();
+    }
+
+    public void formatSharpsAndFlats() {
+>>>>>>> .r296
+        while (parsedNoteString.contains("is")) {
+            parsedNoteString = parsedNoteString.replace("is", "S");
+        }
+
+        for (int i = 0; i < parsedNoteString.length(); i++) {
+            if (parsedNoteString.charAt(i) == 'e' && parsedNoteString.charAt(i + 1) == 's' && parsedNoteString.charAt(i - 1) != ' ') {
+<<<<<<< .mine
+                System.out.println("IN IF");
+                setChar(parsedNoteString, i, "F");
+                removeChar(parsedNoteString, i + 1);
+=======
+
+                parsedNoteString = setChar(parsedNoteString, i, "F");
+                parsedNoteString = removeChar(parsedNoteString, i + 1);
+>>>>>>> .r296
+            }
+        }
+
+        int index = 0;
+
+        //Flats
+        while (index < parsedNoteString.length()) {
+            if (parsedNoteString.charAt(index) == 'f' &&
+                    Character.isLetter(parsedNoteString.charAt(index - 1))) {
+                parsedNoteString = setChar(parsedNoteString, index, "F");
+            }
+            index++;
+        }
+
+        index = 0;
+        //Sharps
+        while (index < parsedNoteString.length()) {
+            if (parsedNoteString.charAt(index) == 's' &&
+                    Character.isLetter(parsedNoteString.charAt(index - 1))) {
+                parsedNoteString = setChar(parsedNoteString, index, "S");
+            }
+            index++;
+        }
+
+    }
+
+    public String setChar(String string, int index, String ch) {
+        String newString = "";
+        newString = string.substring(0, index) + ch + string.substring(index + 1);
+
+        return newString;
+    }
+
+    public String removeChar(String string, int index) {
+        String newString = "";
+        newString = string.substring(0, index) + string.substring(index + 1);
+
+        return newString;
+    }
+
+    public String removeChar(String c, String string) {
+        String newString = "";
+        int index = string.indexOf(c);
+
+        newString = string.substring(0, index) + string.substring(index + 1);
+
+
+        return newString;
+
+    }
+
+    public void getNoteString() {
+
+        int openIndex = fullFileString.indexOf("{") + 1;
+        int closeIndex = fullFileString.indexOf("}");
+
+        while (isEmpty(fullFileString.substring(openIndex, closeIndex))) {
+            openIndex = fullFileString.substring(closeIndex + 1).indexOf("{") + closeIndex + 2;
+            closeIndex = fullFileString.substring(closeIndex + 1).indexOf("}") + closeIndex + 1;
+        }
+        System.out.println(openIndex);
+        System.out.println();
+
+
+        noteString = fullFileString.substring(openIndex, closeIndex);
+        noteString = noteString.trim();
+    }
+
+    public Boolean isEmpty(String string) {
+        for (int i = 0; i < string.length(); i++) {
+            if (Character.isLetter(string.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * RemoveComments- wrapper function that calls removeSubstring while any comments remain
+     * and removes them
+     */
+    public void removeComments() {
+        while (fullFileString.contains("%")) {//while another comment remains
+            removeSubstring("%", "\n");
+
+        }
+
+    }
+
+    /**
+     * RemoveSubstring- taking in two strings, it sets them to the first and last index,
+     * finds the substring in between, and removes it from the fullFileString
+     * @param firstChar
+     * @param lastChar
+     */
+    public void removeSubstring(String firstChar, String lastChar) {
+        int rightIndex = fullFileString.indexOf(firstChar);//finds forst index
+        int leftIndex = fullFileString.substring(rightIndex).indexOf(lastChar);//finds last index
+        String firstPart = fullFileString.substring(0, rightIndex);//takes the substring before the first index
+        String lastPart = fullFileString.substring(rightIndex + leftIndex + 1 + lastChar.length() - 1);//takes the substring after the last index
+
+        fullFileString = firstPart + lastPart;//replaces fullFileString with these two parts, removing anything in between
+    }
+
+    /**
+     * removeSlashTokens- A function that removes all slash tokens in the fullFileString
+     * and stores the information if we consider it useful
+     */
+    public void removeSlashTokens() {
+        removeScore();
+        removeMidi();
+        isRelative();
+
+        while (fullFileString.contains("\\")) {//while a slash token remains
+            removeScore();
+            removeMidi();
+            Boolean foundToken = false;//flag that shows whether information in it is useful
+            foundToken = hasTempo();//check if it's a tempo token
+            foundToken = hasTime();//checks if it's a time token
+            foundToken = hasClef();//checks if it's a clef token
+            foundToken = hasKey();//checks if it's a key token
+            if (!foundToken) {//if none of these
+                removeSubstring("\\", " ");//just remove it
+            }
+        }
+    }
+
+    public void isRelative() {
+        if (fullFileString.contains("\\relative")) {
+            int index = fullFileString.indexOf("\\relative") + 9;
+            Boolean givenArgument = false;
+            relative = true;
+            octave = 4;
+            System.out.println("INDEX TEST:" + fullFileString.charAt(index));
+            while (fullFileString.charAt(index) != '{') {
+                if (Character.isLetter(fullFileString.charAt(index))) {
+                    givenArgument = true;
+                }
+
+                if (fullFileString.charAt(index) == '\'') {
+                    octave++;
+                }
+
+                if (fullFileString.charAt(index) == ',') {
+                    octave--;
+                }
+
+                index++;
+            }
+
+            if(!givenArgument){
+                octave = 5;
+            }
+
+        }
+    }
+
+    public void removeScore() {
+        if (fullFileString.contains("\\score")) {
+            removeSubstring("\\score", "{");
+        }
+    }
+
+    public void removeMidi() {
+        if (fullFileString.contains("\\midi")) {
+            removeSubstring("\\midi", "{");
+        }
+    }
+
+    /**
+     * HasKey- checks if there is a key token, if there is set the value of it to a
+     * key variable, remove the key token from the fullFileString and return true,
+     * else return false
+     * @return Boolean
+     */
+    public Boolean hasKey() {
+        if (fullFileString.contains("\\key")) {//if a key token somewhere in string
+            String afterKey = fullFileString.substring(fullFileString.indexOf("\\key"));//get substring after beginning of key token
+            String rawKey = "\\";
+            int index = 4;
+
+
+
+            while (afterKey.charAt(index) == ' ') {//while there's a space
+                index++;//increase the index
+            }
+
+            key += afterKey.charAt(index);//set this character to key variable
+
+            while (afterKey.charAt(index) != '\\') {
+                index++;//increase the index until you find a forward slash
+            }
+
+            index++;//increase the index again
+
+            while (Character.isLetter(afterKey.charAt(index))) {//while a letter
+                key += afterKey.charAt(index);//put it in key
+                rawKey += afterKey.charAt(index);//also put it in rawKey
+                index++;//increase the index
+            }
+
+            removeSubstring("\\key", rawKey);//remove this portion of code from fullFileString
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *
+     * HasTempo- checks if there is a tempo token, if there is set the value of it to a
+     * tempo variable, remove the tempo token from the fullFileString and return true,
+     * else return false
+     * @return Boolean
+     */
+    public Boolean hasTempo() {
+        if (fullFileString.contains("\\tempo")) {//if a tempo token exists
+            String afterTempo = fullFileString.substring(fullFileString.indexOf("\\tempo"));//get substring at location of tempo token
+            String charTempo = "";
+            int index = 0;
+            while (afterTempo.charAt(index) != '=') {
+                index++;//icrease the index past the equals sign
+            }
+
+            while (!Character.isDigit(afterTempo.charAt(index))) {
+                index++;//increase the index past any spaces
+            }
+
+            while (Character.isDigit(afterTempo.charAt(index))) {//while a digit
+                charTempo += afterTempo.charAt(index);//put it in charTempo
+                index++;
+            }
+
+            tempo = Integer.valueOf(charTempo);//get integer value of charTempo
+            removeSubstring("\\tempo", charTempo);//remove it from fullFileString
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * HasTime- checks if there is a time token, if there is set the value of it to a
+     * time variable, remove the time token from the fullFileString and return true,
+     * else return false
+     * @return Boolean
+     */
+    public Boolean hasTime() {
+        if (fullFileString.contains("\\time")) {//while a timeTempo token exists
+
+            String afterTime = fullFileString.substring(fullFileString.indexOf("\\time"));//get substring after start of time token
+            int currentIndex = 0;
+
+            while (!Character.isDigit(afterTime.charAt(currentIndex))) {
+                currentIndex++;//increase the index while not a digit
+            }
+
+            while (Character.isDigit(afterTime.charAt(currentIndex)) || afterTime.charAt(currentIndex) == '/') {
+                timeSig += afterTime.charAt(currentIndex);//put down the time signature in a string variable
+                currentIndex++;
+            }
+            removeSubstring("\\time", timeSig);//remove time token
+            return true;
+        }
+
+        return false;
+
+
+    }
+
+    /**
+     *
+     * HasClef- checks if there is a clef token, if there is set the value of it to a
+     * clef variable, remove the clef token from the fullFileString and return true,
+     * else return false
+     * @return Boolean
+     */
+    public Boolean hasClef() {
+        if (fullFileString.contains("\\clef")) {//if a clef token exists
+            String afterClef = fullFileString.substring(fullFileString.indexOf("\\clef"));//get substring after start of clef token
+            int index = 5;
+
+            while (!Character.isLetter(afterClef.charAt(index))) {
+                index++;//increase index while not a letter
+            }
+
+            while (Character.isLetter(afterClef.charAt(index))) {//if a letter
+                clef += afterClef.charAt(index);//put in clef string variable
+                index++;
+            }
+            removeSubstring("\\clef", clef);//remove clef token
+            return true;
+        }
+        return false;
+    }
+
+    public int determineRelativeJump(String firstNote, String lastNote){
+        int jump = 0;
+
+
+
+        return jump;
+    }
+
+}
+
+
+
